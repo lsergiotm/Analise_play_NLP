@@ -1,36 +1,30 @@
-import streamlit as st
-from google_play_scraper import app
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+import sys
+from collections import Counter
+from Teste_trab_final import get_text_from_web, remove_stopwords, generate_bar_chart
 
-# Função para obter dados de um aplicativo específico do Google Play
-def get_app_data(app_id):
-    result = app(app_id)
-    return result
+def main():
+    if len(sys.argv) != 2:
+        print("Usage: python Teste_trab_final.py <play_store_app_link>")
+        return
 
-# Função para visualizar avaliações do aplicativo
-def plot_app_reviews(reviews):
-    plt.figure(figsize=(10, 6))
-    sns.countplot(x='score', data=reviews)
-    plt.title('Distribuição das Avaliações')
-    plt.xlabel('Pontuação')
-    plt.ylabel('Contagem')
-    st.pyplot(plt)
+    app_link = sys.argv[1]
+    print(f"Fetching data from: {app_link}")
 
-# Interface Streamlit
-st.title('Análise de Aplicativos do Google Play')
-app_id = st.text_input('Insira o ID do aplicativo do Google Play:', 'com.example.app')
+    # Extraindo o texto da página da Play Store
+    text = get_text_from_web(app_link)
 
-if st.button('Obter Dados do Aplicativo'):
-    if app_id:
-        app_data = get_app_data(app_id)
-        reviews = pd.DataFrame(app_data['comments'])
+    if not text:
+        print("No text found at the provided link.")
+        return
 
-        st.subheader('Dados do Aplicativo')
-        st.write(app_data)
+    # Removendo as palavras de parada
+    filtered_words = remove_stopwords(text)
 
-        st.subheader('Distribuição das Avaliações')
-        plot_app_reviews(reviews)
-    else:
-        st.error('Por favor, insira um ID de aplicativo válido.')
+    # Contando a frequência das palavras
+    word_freq = Counter(filtered_words).most_common(20)
+
+    # Gerando o gráfico de frequência das palavras
+    generate_bar_chart(word_freq)
+
+if __name__ == "__main__":
+    main()
